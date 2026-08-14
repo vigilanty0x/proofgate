@@ -1,0 +1,35 @@
+{
+  "contract_version": "1.0",
+  "task": {
+    "id": "synthetic-release",
+    "initial_state": "PENDING",
+    "terminal_state": "DONE"
+  },
+  "timeout_seconds": 10,
+  "circuit_breaker": {
+    "failure_threshold": 3
+  },
+  "evidence": [
+    {
+      "id": "synthetic-test",
+      "type": "command",
+      "command": ["python", "-c", "print('synthetic test passed')"],
+      "expect_exit": 0,
+      "timeout_seconds": 5
+    },
+    {
+      "id": "artifact",
+      "type": "file",
+      "path": "examples/artifact.txt",
+      "min_bytes": 8
+    },
+    {
+      "id": "report",
+      "type": "json",
+      "path": "examples/report.json",
+      "pointer": "/checks/passed",
+      "equals": true
+    }
+  ]
+}
+
