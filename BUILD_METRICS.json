@@ -1,0 +1,32 @@
+{
+  "release": "0.1.0",
+  "measured_at": "2026-08-15",
+  "runtime_dependencies": 0,
+  "unit_tests": {
+    "count": 35,
+    "passed": 35,
+    "failed": 0,
+    "command": "PYTHONPATH=src python -m unittest discover -s tests -v"
+  },
+  "verification": {
+    "compileall": "passed",
+    "synthetic_demo": "DONE",
+    "journal_replay": "passed",
+    "wheel_build": "passed",
+    "isolated_install": "passed",
+    "installed_cli_version": "proofgate 0.1.0"
+  },
+  "wheel": {
+    "filename": "proofgate-0.1.0-py3-none-any.whl",
+    "sha256": "1c897d33cc0caaa0c45142e509a438563d5e183b9a25c6e1863387718453479b"
+  },
+  "limits": {
+    "contract_bytes": 1048576,
+    "journal_bytes": 67108864,
+    "event_bytes": 262144,
+    "evidence_file_bytes": 67108864,
+    "captured_bytes_per_stream": 65536,
+    "maximum_rules": 128,
+    "maximum_timeout_seconds": 3600
+  }
+}

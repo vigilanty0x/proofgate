@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=70"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "proofgate"
+version = "0.1.0"
+description = "Declarative evidence gates for reproducible task completion"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "Apache-2.0"}
+authors = [{name = "vigilanty0x"}]
+keywords = ["evidence", "reliability", "ci", "verification", "audit"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: Console",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Software Development :: Quality Assurance",
+]
+dependencies = []
+
+[project.scripts]
+proofgate = "proofgate.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/vigilanty0x/proofgate"
+Issues = "https://github.com/vigilanty0x/proofgate/issues"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+

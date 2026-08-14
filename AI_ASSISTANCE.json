@@ -1,0 +1,41 @@
+{
+  "format_version": "1.0",
+  "project": {
+    "name": "ProofGate",
+    "repository": "https://github.com/vigilanty0x/proofgate",
+    "release": "0.1.0"
+  },
+  "assistance": {
+    "provider": "OpenAI",
+    "system": "Codex",
+    "model_family": "GPT-5",
+    "activities": [
+      "architecture drafting",
+      "implementation",
+      "test design",
+      "documentation"
+    ]
+  },
+  "human_role": [
+    "scope selection",
+    "architecture approval",
+    "publication authorization",
+    "release ownership"
+  ],
+  "verification": [
+    "unit and adversarial tests",
+    "isolated wheel installation",
+    "credential and prohibited-reference scan",
+    "pull-request and post-merge CI"
+  ],
+  "limitations": [
+    "commands are not sandboxed",
+    "journals are hash-chained but not signed",
+    "distributed consensus is out of scope"
+  ],
+  "data": {
+    "fixtures": "synthetic",
+    "private_inputs_in_repository": false
+  }
+}
+
