@@ -8,7 +8,8 @@ version = "0.1.0"
 description = "Declarative evidence gates for reproducible task completion"
 readme = "README.md"
 requires-python = ">=3.11"
-license = {text = "Apache-2.0"}
+license = "Apache-2.0"
+license-files = ["LICENSE"]
 authors = [{name = "vigilanty0x"}]
 keywords = ["evidence", "reliability", "ci", "verification", "audit"]
 classifiers = [
