@@ -1,0 +1,14 @@
+{
+  "events": [
+    {
+      "index": 0,
+      "previous": "0000000000000000000000000000000000000000000000000000000000000000",
+      "actor": "demo-user",
+      "action": "read",
+      "target": "sample",
+      "metadata": {},
+      "hash": "0db856c25b14a2db53180264584caea21d4054324ab2eea4c747b5faf5a997c9"
+    }
+  ]
+}
+
