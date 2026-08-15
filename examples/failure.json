@@ -1,0 +1,21 @@
+{
+  "subject": "synthetic-api",
+  "operation_id": "example-failure-001",
+  "recorded_at": "2026-01-01T00:00:00Z",
+  "checks": [
+    {
+      "name": "heartbeat",
+      "outcome": "fail",
+      "required": true,
+      "detail": "Synthetic counter-example returned an outage marker.",
+      "provenance": {
+        "source": "synthetic-fixture",
+        "observed_at": "2026-01-01T00:00:00Z",
+        "collector": "status-truth-example",
+        "evidence_sha256": "fcbcf165908dd18a9e49f7ff27810176f4bb2e54670dfc201ede2344da68f15f",
+        "reference": "fixture://counter-proof"
+      }
+    }
+  ]
+}
+
