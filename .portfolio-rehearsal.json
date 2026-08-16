@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "target": "proofgate",
+  "base": "proofgate",
+  "baseHeadSha": "7b4fd1eb84241f647a91d55dd478a78f60105b31",
+  "sources": [
+    {
+      "repository": "status-truth",
+      "prefix": "packages/status-truth",
+      "headSha": "f6a442b29b932be83d2d067b062d72b322b6ae01",
+      "treeSha": "dfaccac67c63b8c29376ea9f2e8f70a17fa25cf5",
+      "ancestor": true,
+      "treeMatch": true
+    },
+    {
+      "repository": "structured-output-guard",
+      "prefix": "packages/structured-output-guard",
+      "headSha": "bf4ae013d091957163afbba6ee7c114b6d4fb9a9",
+      "treeSha": "ad5c4b708abe101b12e688c3f6d8e0a0201915bd",
+      "ancestor": true,
+      "treeMatch": true
+    },
+    {
+      "repository": "evidence-ledger",
+      "prefix": "packages/evidence-ledger",
+      "headSha": "ed8ca34bca8119dbeda038f4598cafe05025ff80",
+      "treeSha": "ada7c0f795d0880e9a7e6546edc6e353f624ac0c",
+      "ancestor": true,
+      "treeMatch": true
+    },
+    {
+      "repository": "run-replay",
+      "prefix": "packages/run-replay",
+      "headSha": "72026f03daa76844e6737937293573f80ae9d3ef",
+      "treeSha": "ca758b7404a0c9f634ee94b37bc0d59dab681250",
+      "ancestor": true,
+      "treeMatch": true
+    },
+    {
+      "repository": "audit-trail-lite",
+      "prefix": "packages/audit-trail-lite",
+      "headSha": "1b7dab94f577161af38b6c01471e40ff36c0bc33",
+      "treeSha": "d5b638c8c315a46a0a6990ee88f366513db1079c",
+      "ancestor": true,
+      "treeMatch": true
+    }
+  ],
+  "state": "REHEARSAL_ONLY",
+  "archiveGate": "BLOCKED",
+  "reason": "Tests, compatibility, release, redirect, consumer, rollback, and human gates are not all verified."
+}
