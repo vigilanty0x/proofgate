@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ssrf-guard-demo"
+version = "0.1.0"
+description = "URL and resolved-IP policy guard blocking private, local, credentialed, and unsafe targets."
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "Apache-2.0"}
+dependencies = []
+
+[project.scripts]
+ssrf-guard-demo = "ssrf_guard_demo.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+[tool.setuptools.packages.find]
+where = ["src"]
