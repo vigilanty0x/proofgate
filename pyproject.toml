@@ -1,17 +1,17 @@
 [build-system]
-requires = ["setuptools>=70"]
+requires = ["setuptools==80.9.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "proofgate"
-version = "0.1.0"
+version = "0.2.0"
 description = "Declarative evidence gates for reproducible task completion"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "Apache-2.0"
 license-files = ["LICENSE"]
 authors = [{name = "vigilanty0x"}]
-keywords = ["evidence", "reliability", "ci", "verification", "audit"]
+keywords = ["evidence", "reliability", "ci", "verification", "audit", "attestation", "policy"]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Environment :: Console",
@@ -34,4 +34,3 @@ package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
-
