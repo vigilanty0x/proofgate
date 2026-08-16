@@ -1,0 +1,7 @@
+{
+  "suite_version": "1.0",
+  "id": "synthetic-release",
+  "contracts": [
+    {"id": "quality-gate", "path": "examples/proofgate.json"}
+  ]
+}

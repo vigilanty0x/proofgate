@@ -1,10 +1,10 @@
 {
-  "release": "0.1.0",
-  "measured_at": "2026-08-15",
+  "release": "0.2.0",
+  "measured_at": "2026-08-16",
   "runtime_dependencies": 0,
   "unit_tests": {
-    "count": 35,
-    "passed": 35,
+    "count": 87,
+    "passed": 87,
     "failed": 0,
     "command": "PYTHONPATH=src python -m unittest discover -s tests -v"
   },
@@ -12,13 +12,20 @@
     "compileall": "passed",
     "synthetic_demo": "DONE",
     "journal_replay": "passed",
+    "concurrent_claim_and_append": "passed",
+    "detached_descendant_timeout": "passed",
+    "strict_json_boundaries": "passed",
+    "recursive_type_comparison": "passed",
+    "completion_record_semantics": "passed",
+    "persistent_terminal_reservation": "passed",
+    "descriptor_anchored_no_follow_reads": "passed",
     "wheel_build": "passed",
     "isolated_install": "passed",
-    "installed_cli_version": "proofgate 0.1.0"
+    "installed_cli_version": "proofgate 0.2.0"
   },
   "wheel": {
-    "filename": "proofgate-0.1.0-py3-none-any.whl",
-    "sha256": "1c897d33cc0caaa0c45142e509a438563d5e183b9a25c6e1863387718453479b"
+    "filename": "proofgate-0.2.0-py3-none-any.whl",
+    "sha256": "8a9e61199faf580b676e0b52ce6a4ccef0e2cb0f8788e7272cc5b77fbd6cfad7"
   },
   "limits": {
     "contract_bytes": 1048576,

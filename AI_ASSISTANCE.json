@@ -3,7 +3,7 @@
   "project": {
     "name": "ProofGate",
     "repository": "https://github.com/vigilanty0x/proofgate",
-    "release": "0.1.0"
+    "release": "0.2.0"
   },
   "assistance": {
     "provider": "OpenAI",
@@ -23,7 +23,7 @@
     "release ownership"
   ],
   "verification": [
-    "unit and adversarial tests",
+    "77 unit and adversarial tests",
     "isolated wheel installation",
     "credential and prohibited-reference scan",
     "pull-request and post-merge CI"
@@ -38,4 +38,3 @@
     "private_inputs_in_repository": false
   }
 }
-
