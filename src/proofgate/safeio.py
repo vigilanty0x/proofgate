@@ -13,7 +13,7 @@ from typing import BinaryIO, Iterator
 
 
 class UnsafePathError(OSError):
-    """A path cannot be opened without crossing a symlink or non-directory."""
+    """A path cannot be opened without crossing an untrusted link or non-directory."""
 
 
 class FileBoundError(OSError):
@@ -44,10 +44,10 @@ def _relative_parts(relative: str | Path, *, allow_root: bool = False) -> tuple[
     if not isinstance(value, str) or not value or "\x00" in value:
         raise UnsafePathError("path must be a non-empty string without NUL bytes")
     normalized = value.replace("\\", "/")
+    if len(normalized) >= 2 and normalized[1] == ":":
+        raise UnsafePathError("path must be relative to the evaluation root")
     candidate = Path(normalized)
-    if candidate.is_absolute() or normalized.startswith("//") or (
-        len(normalized) >= 2 and normalized[1] == ":"
-    ):
+    if candidate.is_absolute() or normalized.startswith("//"):
         raise UnsafePathError("path must be relative to the evaluation root")
     parts = tuple(part for part in candidate.parts if part not in {"", "."})
     if ".." in parts:
@@ -78,7 +78,30 @@ def _file_flags() -> int:
         | getattr(os, "O_CLOEXEC", 0)
         | getattr(os, "O_NOFOLLOW", 0)
         | getattr(os, "O_NONBLOCK", 0)
+        | getattr(os, "O_BINARY", 0)
     )
+
+
+def _is_link_or_reparse(info: os.stat_result) -> bool:
+    """Return true for POSIX symlinks and Windows reparse points/junctions."""
+
+    if stat.S_ISLNK(info.st_mode):
+        return True
+    attributes = getattr(info, "st_file_attributes", 0)
+    reparse = getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400)
+    return bool(attributes & reparse)
+
+
+def _trusted_root(root: str | Path) -> Path:
+    """Resolve the caller-supplied trust anchor before no-follow traversal.
+
+    The evaluation root itself is the trust boundary.  Resolving it once permits
+    normal platform aliases such as macOS ``/var -> /private/var`` while every
+    evidence path *below* that root remains no-follow/fail-closed.
+    """
+
+    value = os.path.abspath(os.fspath(root))
+    return Path(os.path.realpath(value))
 
 
 def _open_directory_component(parent_fd: int, component: str, *, label: str) -> int:
@@ -97,15 +120,14 @@ def _open_directory_component(parent_fd: int, component: str, *, label: str) -> 
 
 def _open_root(root: str | Path) -> int:
     if os.name != "posix" or not hasattr(os, "O_NOFOLLOW"):
-        # The fallback performs component checks and handle identity validation,
-        # but POSIX openat is the only path used by supported release CI.
-        return _open_root_fallback(root)
+        raise UnsafePathError("descriptor-relative root opens are unavailable on this platform")
+    trusted = _trusted_root(root)
     try:
         descriptor = os.open(os.path.abspath(os.sep), _directory_flags())
     except OSError as exc:
         raise UnsafePathError(f"cannot anchor evaluation root: {exc}") from exc
     try:
-        for component in _absolute_parts(root):
+        for component in _absolute_parts(trusted):
             next_descriptor = _open_directory_component(
                 descriptor,
                 component,
@@ -119,24 +141,48 @@ def _open_root(root: str | Path) -> int:
         raise
 
 
-def _open_root_fallback(root: str | Path) -> int:
-    absolute = Path(os.path.abspath(os.fspath(root)))
-    current = Path(absolute.anchor)
-    for component in _absolute_parts(absolute):
-        current = current / component
-        try:
-            if current.is_symlink():
-                raise UnsafePathError("evaluation root crosses a symlink component")
-        except OSError as exc:
-            raise UnsafePathError(f"cannot inspect evaluation root: {exc}") from exc
-    try:
-        descriptor = os.open(absolute, _directory_flags())
-    except OSError as exc:
-        raise _unsafe_open_error(exc, label="evaluation root") from exc
-    if not stat.S_ISDIR(os.fstat(descriptor).st_mode):
-        os.close(descriptor)
+def _fallback_root(root: str | Path) -> Path:
+    trusted = _trusted_root(root)
+    info = os.stat(trusted)
+    if not stat.S_ISDIR(info.st_mode):
         raise UnsafePathError("evaluation root is not a directory")
-    return descriptor
+    return trusted
+
+
+def _fallback_path(
+    root: str | Path,
+    relative: str | Path,
+    *,
+    require_directory: bool = False,
+) -> Path:
+    """Validate a path on platforms without secure ``openat`` directory FDs.
+
+    Every untrusted component is inspected without following links/reparse
+    points.  The root itself is already a resolved caller-supplied trust anchor.
+    """
+
+    root_path = _fallback_root(root)
+    parts = _relative_parts(relative, allow_root=require_directory)
+    current = root_path
+    for index, component in enumerate(parts):
+        current = current / component
+        info = os.lstat(current)
+        if _is_link_or_reparse(info):
+            raise UnsafePathError(f"{relative} crosses a symlink or reparse point")
+        if index < len(parts) - 1 or require_directory:
+            if not stat.S_ISDIR(info.st_mode):
+                raise UnsafePathError(f"{relative} crosses a non-directory component")
+
+    # A second containment check catches platform path aliases and case folding.
+    resolved_root = os.path.normcase(os.path.realpath(os.fspath(root_path)))
+    resolved_target = os.path.normcase(os.path.realpath(os.fspath(current)))
+    try:
+        common = os.path.commonpath([resolved_root, resolved_target])
+    except ValueError as exc:
+        raise UnsafePathError("path is not on the evaluation root volume") from exc
+    if os.path.normcase(common) != resolved_root:
+        raise UnsafePathError("path escapes the evaluation root")
+    return current
 
 
 def _open_directory_under_root(root: str | Path, relative: str | Path) -> int:
@@ -153,13 +199,57 @@ def _open_directory_under_root(root: str | Path, relative: str | Path) -> int:
 
 
 @contextmanager
-def open_regular_file(root: str | Path, relative: str | Path) -> Iterator[tuple[BinaryIO, os.stat_result]]:
-    """Open one regular file beneath ``root`` without following any symlink.
+def _open_regular_file_fallback(
+    root: str | Path,
+    relative: str | Path,
+) -> Iterator[tuple[BinaryIO, os.stat_result]]:
+    target = _fallback_path(root, relative)
+    before = os.lstat(target)
+    if _is_link_or_reparse(before) or not stat.S_ISREG(before.st_mode):
+        raise UnsafePathError(f"{relative} is not a regular no-follow file")
+    try:
+        descriptor = os.open(target, _file_flags())
+    except OSError as exc:
+        raise _unsafe_open_error(exc, label=os.fspath(relative)) from exc
+    handle: BinaryIO | None = None
+    try:
+        after = os.fstat(descriptor)
+        if not stat.S_ISREG(after.st_mode):
+            raise UnsafePathError(f"{relative} is not a regular file")
+        # Revalidate the pathname after opening.  Where stable inode identifiers
+        # are available, bind the pathname check to the opened handle as well.
+        second = os.lstat(_fallback_path(root, relative))
+        if _is_link_or_reparse(second):
+            raise UnsafePathError(f"{relative} became a link during open")
+        if before.st_dev and before.st_ino and after.st_dev and after.st_ino:
+            if (before.st_dev, before.st_ino) != (after.st_dev, after.st_ino):
+                raise UnsafePathError(f"{relative} changed during open")
+        if second.st_dev and second.st_ino and after.st_dev and after.st_ino:
+            if (second.st_dev, second.st_ino) != (after.st_dev, after.st_ino):
+                raise UnsafePathError(f"{relative} changed during verification")
+        handle = os.fdopen(descriptor, "rb", closefd=True)
+        descriptor = -1
+        yield handle, after
+    finally:
+        if handle is not None:
+            handle.close()
+        if descriptor >= 0:
+            os.close(descriptor)
 
-    Every directory component is opened relative to its already-open parent.  The
-    returned file descriptor therefore remains bound to the inspected inode even
-    if an attacker concurrently replaces a pathname.
+
+@contextmanager
+def open_regular_file(root: str | Path, relative: str | Path) -> Iterator[tuple[BinaryIO, os.stat_result]]:
+    """Open one regular file beneath ``root`` without following untrusted links.
+
+    POSIX uses descriptor-relative no-follow traversal.  Other platforms use a
+    conservative component/reparse validation fallback plus handle identity
+    checks where the platform exposes stable identifiers.
     """
+
+    if os.name != "posix" or not hasattr(os, "O_NOFOLLOW"):
+        with _open_regular_file_fallback(root, relative) as opened:
+            yield opened
+        return
 
     parts = _relative_parts(relative)
     directory_fd = _open_root(root)
@@ -224,11 +314,60 @@ def hash_regular_file(root: str | Path, relative: str | Path, *, maximum: int) -
     return FileDigest(size=size, sha256=digest.hexdigest())
 
 
+def _walk_regular_files_fallback(
+    root: str | Path,
+    relative: str | Path,
+    *,
+    maximum_entries: int,
+) -> list[str]:
+    base = _fallback_path(root, relative, require_directory=True)
+    found: list[str] = []
+    seen_entries = 0
+
+    def visit(directory: Path, nested: tuple[str, ...]) -> None:
+        nonlocal seen_entries
+        try:
+            entries = sorted(os.scandir(directory), key=lambda entry: entry.name)
+        except OSError as exc:
+            raise UnsafePathError(f"cannot inventory directory safely: {exc}") from exc
+        try:
+            for entry in entries:
+                seen_entries += 1
+                if seen_entries > maximum_entries:
+                    raise FileBoundError(maximum_entries, seen_entries)
+                try:
+                    info = entry.stat(follow_symlinks=False)
+                except OSError as exc:
+                    raise UnsafePathError(f"cannot inspect directory entry safely: {exc}") from exc
+                if _is_link_or_reparse(info):
+                    raise UnsafePathError("directory inventory encountered a symlink or reparse point")
+                child = directory / entry.name
+                if stat.S_ISDIR(info.st_mode):
+                    # Revalidate the component before descending so a replacement
+                    # becomes a blockage instead of being followed.
+                    _fallback_path(root, child.relative_to(_fallback_root(root)), require_directory=True)
+                    visit(child, (*nested, entry.name))
+                elif stat.S_ISREG(info.st_mode):
+                    found.append("/".join((*nested, entry.name)))
+        finally:
+            for entry in entries:
+                try:
+                    entry.close()  # type: ignore[attr-defined]
+                except (AttributeError, OSError):
+                    pass
+
+    visit(base, ())
+    return found
+
+
 def walk_regular_files(root: str | Path, relative: str | Path, *, maximum_entries: int) -> list[str]:
-    """Return regular files below a directory, refusing every symlink encountered."""
+    """Return regular files below a directory, refusing every link encountered."""
 
     if type(maximum_entries) is not int or maximum_entries < 1:
         raise ValueError("maximum_entries must be a positive integer")
+    if os.name != "posix" or not hasattr(os, "O_NOFOLLOW"):
+        return _walk_regular_files_fallback(root, relative, maximum_entries=maximum_entries)
+
     base_parts = _relative_parts(relative, allow_root=True)
     root_fd = _open_directory_under_root(root, relative)
     found: list[str] = []
