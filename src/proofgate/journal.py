@@ -9,8 +9,10 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import threading
 from typing import Any, BinaryIO, Iterable, Iterator
 import uuid
+import weakref
 
 from .jsonutil import StrictJSONError, strict_dumps, strict_loads
 
@@ -18,9 +20,30 @@ MAX_EVENT_BYTES = 256 * 1024
 MAX_JOURNAL_BYTES = 64 * 1024 * 1024
 ZERO_HASH = "0" * 64
 
+_PROCESS_LOCKS_GUARD = threading.Lock()
+_PROCESS_LOCKS: weakref.WeakValueDictionary[str, threading.RLock] = weakref.WeakValueDictionary()
+
 
 class JournalError(RuntimeError):
     """The event journal is invalid, conflicting, or unavailable."""
+
+
+def _path_process_lock(path: Path) -> threading.RLock:
+    """Share one in-process re-entrant lock for every canonical journal path.
+
+    Windows byte-range locks can report a same-process deadlock when two Python
+    threads race to lock the same byte.  The in-process lock serializes that
+    case while the OS lock remains the cross-process authority.  Weak storage
+    avoids an unbounded registry when applications use many journal paths.
+    """
+
+    key = os.path.normcase(os.path.abspath(os.fspath(path)))
+    with _PROCESS_LOCKS_GUARD:
+        lock = _PROCESS_LOCKS.get(key)
+        if lock is None:
+            lock = threading.RLock()
+            _PROCESS_LOCKS[key] = lock
+        return lock
 
 
 def _unique_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
@@ -56,59 +79,62 @@ class EventJournal:
 
     def __init__(self, path: str | Path):
         self.path = Path(path)
+        self._process_lock = _path_process_lock(self.path)
 
     @contextmanager
     def _lock(self, *, exclusive: bool) -> Iterator[BinaryIO | None]:
         """Lock and yield the same handle used for journal I/O.
 
-        Windows mandatory byte-range locks can reject a second handle opened by
-        the same process.  Reading and appending through the already-locked
-        handle therefore preserves the atomic section on every supported OS.
+        The per-path Python lock serializes same-process threads.  The file lock
+        then provides cross-process exclusion.  Reading and appending use the
+        already-locked handle so Windows mandatory locks never require a second
+        handle inside the atomic section.
         """
 
-        if exclusive:
-            self.path.parent.mkdir(parents=True, exist_ok=True)
-            mode = "a+b"
-        else:
-            if not self.path.exists():
+        with self._process_lock:
+            if exclusive:
+                self.path.parent.mkdir(parents=True, exist_ok=True)
+                mode = "a+b"
+            else:
+                if not self.path.exists():
+                    yield None
+                    return
+                mode = "rb"
+            try:
+                handle = self.path.open(mode)
+            except FileNotFoundError:
                 yield None
                 return
-            mode = "rb"
-        try:
-            handle = self.path.open(mode)
-        except FileNotFoundError:
-            yield None
-            return
-        except OSError as exc:
-            raise JournalError(f"cannot open journal lock: {exc}") from exc
-        try:
-            if os.name == "nt":
-                import msvcrt
-
-                handle.seek(0)
-                operation = msvcrt.LK_LOCK if exclusive else msvcrt.LK_RLCK
-                msvcrt.locking(handle.fileno(), operation, 1)
-            else:
-                import fcntl
-
-                fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
-            yield handle
-        except OSError as exc:
-            raise JournalError(f"journal lock failed: {exc}") from exc
-        finally:
+            except OSError as exc:
+                raise JournalError(f"cannot open journal lock: {exc}") from exc
             try:
                 if os.name == "nt":
                     import msvcrt
 
                     handle.seek(0)
-                    msvcrt.locking(handle.fileno(), msvcrt.LK_UNLCK, 1)
+                    operation = msvcrt.LK_LOCK if exclusive else msvcrt.LK_RLCK
+                    msvcrt.locking(handle.fileno(), operation, 1)
                 else:
                     import fcntl
 
-                    fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
-            except OSError:
-                pass
-            handle.close()
+                    fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+                yield handle
+            except OSError as exc:
+                raise JournalError(f"journal lock failed: {exc}") from exc
+            finally:
+                try:
+                    if os.name == "nt":
+                        import msvcrt
+
+                        handle.seek(0)
+                        msvcrt.locking(handle.fileno(), msvcrt.LK_UNLCK, 1)
+                    else:
+                        import fcntl
+
+                        fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+                except OSError:
+                    pass
+                handle.close()
 
     def _read_lines(self, handle: BinaryIO | None = None) -> list[str]:
         if handle is None and not self.path.exists():
@@ -260,7 +286,7 @@ class EventJournal:
             raise JournalError("reserve_bytes is supported only for attempt_claim events")
         canonical_data = _canonical(data)
         with self._lock(exclusive=True) as handle:
-            if handle is None:  # exclusive locking always creates the file
+            if handle is None:
                 raise JournalError("cannot acquire writable journal handle")
             replay = self._replay_unlocked(handle)
             for event in replay.events:
