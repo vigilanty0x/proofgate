@@ -61,7 +61,9 @@ class _TailCapture:
 
     @property
     def text(self) -> str:
-        return bytes(self.buffer).decode("utf-8", "replace")
+        # Stable machine-readable evidence should not change merely because the
+        # child process ran on Windows.  Byte counters remain raw/unmodified.
+        return bytes(self.buffer).decode("utf-8", "replace").replace("\r\n", "\n").replace("\r", "\n")
 
     @property
     def truncated(self) -> bool:
