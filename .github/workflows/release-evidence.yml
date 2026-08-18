@@ -1,0 +1,59 @@
+name: Release evidence
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  attest-release-candidate:
+    name: Build and attest candidate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - name: Install pinned build tooling
+        run: python -m pip install --disable-pip-version-check "build==1.2.2.post1" "wheel==0.45.1"
+      - name: Build wheel and sdist
+        run: python -m build
+      - name: Install candidate wheel
+        run: python -c "import glob, subprocess, sys; wheels=glob.glob('dist/*.whl'); assert len(wheels) == 1, wheels; subprocess.check_call([sys.executable, '-m', 'pip', 'install', '--force-reinstall', '--no-deps', wheels[0]])"
+      - name: Unit tests
+        run: python -m unittest discover -s tests -v
+      - name: Counter-proof must fail closed
+        run: python -c "import subprocess, sys; r=subprocess.run(['proofgate','check','examples/proofgate.json','--root','.','--json']); print('expected exit=2 actual=', r.returncode); sys.exit(0 if r.returncode == 2 else 1)"
+      - name: Smoke installed CLI outside checkout
+        working-directory: ${{ runner.temp }}
+        run: proofgate --version
+      - name: Generate checksums and CycloneDX SBOM
+        run: python scripts/release_evidence.py --dist dist
+      - name: Attest wheel provenance
+        uses: actions/attest@508db95dd578ae2727ebd6217d5ba78e4fbda05d # v4.2.1
+        with:
+          subject-path: dist/*.whl
+      - name: Attest sdist provenance
+        uses: actions/attest@508db95dd578ae2727ebd6217d5ba78e4fbda05d # v4.2.1
+        with:
+          subject-path: dist/*.tar.gz
+      - name: Attest wheel SBOM
+        uses: actions/attest@508db95dd578ae2727ebd6217d5ba78e4fbda05d # v4.2.1
+        with:
+          subject-path: dist/*.whl
+          sbom-path: dist/proofgate.cdx.json
+      - name: Upload candidate evidence bundle
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: proofgate-release-evidence-${{ github.sha }}
+          path: dist/
+          if-no-files-found: error
+          retention-days: 14

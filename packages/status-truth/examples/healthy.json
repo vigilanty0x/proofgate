@@ -1,0 +1,23 @@
+{
+  "subject": "synthetic-api",
+  "operation_id": "example-healthy-001",
+  "recorded_at": "2026-01-01T00:00:00Z",
+  "policy": {"name": "demo-v1", "required_names": ["heartbeat"]},
+  "checks": [
+    {
+      "name": "heartbeat",
+      "outcome": "pass",
+      "required": true,
+      "detail": "Synthetic heartbeat returned the expected marker.",
+      "provenance": {
+        "source": "synthetic-fixture",
+        "observed_at": "2026-01-01T00:00:00Z",
+        "collector": "status-truth-example",
+        "evidence_sha256": "8a798890fe93817163b10b5f8437b92ba6f8ca9e4fbfcb865c39a3a7c9267355",
+        "reference": "fixture://heartbeat"
+      }
+    }
+  ],
+  "metadata": {"environment": "synthetic"}
+}
+
