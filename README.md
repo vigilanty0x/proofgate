@@ -121,10 +121,10 @@ if not verdict.done:
 - `DONE` is produced only when every rule returns verified proof.
 - A journaled run atomically claims its idempotency key before evaluating evidence. A completed retry returns the recorded verdict without re-running commands; a concurrent or interrupted attempt fails closed, and changing request meaning is a conflict.
 - Events use a sequence number, previous hash, and canonical SHA-256 event hash.
-- Journal reads and appends lock the journal file so concurrent writers cannot reuse a sequence or chain head. Outstanding attempts retain a maximum-event reservation until their terminal verdict is appended; competing writes cannot consume it. Recorded verdicts contain bounded messages and evidence-detail digests rather than raw command output.
-- Command rules use `shell=False`, bounded argument arrays, a working-directory root, output limits, and timeouts.
+- Journal reads and appends lock the journal file and reuse the locked handle for I/O, so concurrent writers cannot reuse a sequence or chain head across the supported OS matrix. Outstanding attempts retain a maximum-event reservation until their terminal verdict is appended; competing writes cannot consume it. Recorded verdicts contain bounded messages and evidence-detail digests rather than raw command output.
+- Command rules use `shell=False`, bounded argument arrays, a working-directory root, output limits, and timeouts. Captured text normalizes platform newline conventions while raw byte counts remain unchanged.
 - Reaching the configured failure threshold opens the circuit before any command runs.
-- File, JSON, text, receipt, artifact, suite-contract, and directory reads are descriptor-anchored below the configured root; no symlink component is followed, including during concurrent pathname replacement.
+- File, JSON, text, receipt, artifact, suite-contract, and directory reads are confined below a caller-supplied trust root and refuse symlink/reparse components. POSIX uses descriptor-relative no-follow traversal; platforms without that facility use conservative component validation plus opened-handle identity checks where available.
 - Errors retain stable codes and cannot be silently converted into success.
 - Evidence can depend on earlier rules; failed prerequisites block downstream evaluation.
 - `all`, `any`, and explicit threshold policies are validated and reported in every verdict.
