@@ -9,7 +9,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any, BinaryIO, Iterable, Iterator
 import uuid
 
 from .jsonutil import StrictJSONError, strict_dumps, strict_loads
@@ -58,23 +58,26 @@ class EventJournal:
         self.path = Path(path)
 
     @contextmanager
-    def _lock(self, *, exclusive: bool) -> Iterable[None]:
-        """Lock the journal inode without requiring a writable directory to replay."""
+    def _lock(self, *, exclusive: bool) -> Iterator[BinaryIO | None]:
+        """Lock and yield the same handle used for journal I/O.
+
+        Windows mandatory byte-range locks can reject a second handle opened by
+        the same process.  Reading and appending through the already-locked
+        handle therefore preserves the atomic section on every supported OS.
+        """
 
         if exclusive:
             self.path.parent.mkdir(parents=True, exist_ok=True)
             mode = "a+b"
         else:
             if not self.path.exists():
-                # An empty snapshot is valid at this instant. A future writer will
-                # create and lock the file before appending its first event.
-                yield
+                yield None
                 return
             mode = "rb"
         try:
             handle = self.path.open(mode)
         except FileNotFoundError:
-            yield
+            yield None
             return
         except OSError as exc:
             raise JournalError(f"cannot open journal lock: {exc}") from exc
@@ -89,7 +92,7 @@ class EventJournal:
                 import fcntl
 
                 fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
-            yield
+            yield handle
         except OSError as exc:
             raise JournalError(f"journal lock failed: {exc}") from exc
         finally:
@@ -107,19 +110,28 @@ class EventJournal:
                 pass
             handle.close()
 
-    def _read_lines(self) -> list[str]:
-        if not self.path.exists():
+    def _read_lines(self, handle: BinaryIO | None = None) -> list[str]:
+        if handle is None and not self.path.exists():
             return []
         try:
-            if self.path.stat().st_size > MAX_JOURNAL_BYTES:
-                raise JournalError(f"journal exceeds {MAX_JOURNAL_BYTES} bytes")
-            return self.path.read_text(encoding="utf-8").splitlines()
+            if handle is None:
+                size = self.path.stat().st_size
+                if size > MAX_JOURNAL_BYTES:
+                    raise JournalError(f"journal exceeds {MAX_JOURNAL_BYTES} bytes")
+                raw = self.path.read_bytes()
+            else:
+                size = os.fstat(handle.fileno()).st_size
+                if size > MAX_JOURNAL_BYTES:
+                    raise JournalError(f"journal exceeds {MAX_JOURNAL_BYTES} bytes")
+                handle.seek(0)
+                raw = handle.read()
+            return raw.decode("utf-8").splitlines()
         except JournalError:
             raise
         except (OSError, UnicodeError) as exc:
             raise JournalError(f"cannot read journal: {exc}") from exc
 
-    def _replay_unlocked(self) -> Replay:
+    def _replay_unlocked(self, handle: BinaryIO | None = None) -> Replay:
         events: list[dict[str, Any]] = []
         seen_ids: set[str] = set()
         seen_keys: set[str] = set()
@@ -127,7 +139,7 @@ class EventJournal:
         failures = 0
         states: list[str] = []
 
-        for index, line in enumerate(self._read_lines(), start=1):
+        for index, line in enumerate(self._read_lines(handle), start=1):
             if not line.strip():
                 raise JournalError(f"blank journal line at {index}")
             if len(line.encode("utf-8")) > MAX_EVENT_BYTES:
@@ -192,8 +204,8 @@ class EventJournal:
         return Replay(tuple(events), previous, failures, tuple(states))
 
     def replay(self) -> Replay:
-        with self._lock(exclusive=False):
-            return self._replay_unlocked()
+        with self._lock(exclusive=False) as handle:
+            return self._replay_unlocked(handle)
 
     def find(self, idempotency_key: str) -> dict[str, Any] | None:
         """Return one verified event by idempotency key without creating a journal."""
@@ -247,8 +259,10 @@ class EventJournal:
         if reserve_bytes and kind != "attempt_claim":
             raise JournalError("reserve_bytes is supported only for attempt_claim events")
         canonical_data = _canonical(data)
-        with self._lock(exclusive=True):
-            replay = self._replay_unlocked()
+        with self._lock(exclusive=True) as handle:
+            if handle is None:  # exclusive locking always creates the file
+                raise JournalError("cannot acquire writable journal handle")
+            replay = self._replay_unlocked(handle)
             for event in replay.events:
                 if event["idempotency_key"] == idempotency_key:
                     if event["kind"] == kind and _canonical(event["data"]) == canonical_data:
@@ -280,7 +294,7 @@ class EventJournal:
             encoded = _canonical(event) + b"\n"
             if len(encoded) > MAX_EVENT_BYTES:
                 raise JournalError(f"event exceeds {MAX_EVENT_BYTES} bytes")
-            current_size = self.path.stat().st_size if self.path.exists() else 0
+            current_size = os.fstat(handle.fileno()).st_size
             outstanding = self._outstanding_attempts(replay)
             reserved_terminal_bytes = len(outstanding) * MAX_EVENT_BYTES
             if kind == "verdict" and idempotency_key.endswith(":verdict"):
@@ -295,10 +309,10 @@ class EventJournal:
                     )
                 raise JournalError(f"journal exceeds {MAX_JOURNAL_BYTES} bytes")
             try:
-                with self.path.open("ab") as handle:
-                    handle.write(encoded)
-                    handle.flush()
-                    os.fsync(handle.fileno())
+                handle.seek(0, os.SEEK_END)
+                handle.write(encoded)
+                handle.flush()
+                os.fsync(handle.fileno())
             except OSError as exc:
                 raise JournalError(f"cannot append journal: {exc}") from exc
             return event, True
