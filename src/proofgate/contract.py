@@ -39,11 +39,11 @@ def _safe_relative_path(value: Any, label: str) -> str:
     if not isinstance(value, str) or not value.strip() or len(value) > 4096 or "\x00" in value:
         raise ContractError(f"{label} must be a non-empty string")
     normalized = value.replace("\\", "/")
+    if len(normalized) >= 2 and normalized[1] == ":":
+        raise ContractError(f"{label} must not be a drive path")
     candidate = Path(normalized)
     if candidate.is_absolute() or normalized.startswith("//"):
         raise ContractError(f"{label} must be relative")
-    if len(normalized) >= 2 and normalized[1] == ":":
-        raise ContractError(f"{label} must not be a drive path")
     if ".." in candidate.parts:
         raise ContractError(f"{label} must not traverse parent directories")
     return normalized
@@ -75,7 +75,7 @@ class Policy:
             return evidence_count
         if self.mode == "any":
             return 1
-        if self.minimum_verified is None:  # protected by contract validation
+        if self.minimum_verified is None:
             raise ContractError("threshold policy is missing minimum_verified")
         return self.minimum_verified
 
