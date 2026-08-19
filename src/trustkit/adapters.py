@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+import ipaddress
 import json
 import re
-from collections.abc import Mapping, Sequence
 
 from .core import Category, Evaluation, Finding, FindingState, Severity, evaluate
 from .redaction import redact
@@ -239,6 +240,11 @@ def normalize_permission_matrix(
     expected = _permission_expectations(expected_decisions)
     seen: set[tuple[str, str, str]] = set()
     findings: list[Finding] = []
+    valid_outcomes = {
+        ("allowed", "explicit_allow"),
+        ("denied", "explicit_deny"),
+        ("denied", "no_rule"),
+    }
     for index, raw in enumerate(raw_matrix):
         if not isinstance(raw, Mapping) or set(raw) != {"subject", "action", "resource", "decision", "reason"}:
             raise AdapterContractError("permission matrix cell has unexpected shape")
@@ -247,8 +253,8 @@ def normalize_permission_matrix(
         resource = _bounded_text(raw["resource"], label="resource", limit=256)
         decision = raw["decision"]
         reason = _bounded_text(raw["reason"], label="reason", limit=128)
-        if decision not in {"allowed", "denied"}:
-            raise AdapterContractError("permission matrix decision is invalid")
+        if (decision, reason) not in valid_outcomes:
+            raise AdapterContractError("permission matrix decision/reason combination is invalid")
         key = (subject, action, resource)
         if key in seen:
             raise AdapterContractError("duplicate permission matrix cell")
@@ -266,29 +272,86 @@ def normalize_permission_matrix(
     return AdapterResult("permission-matrix", "measured", tuple(findings), bool(expected) and seen == set(expected))
 
 
-def normalize_ssrf(result: Mapping[str, object], *, expected_decision: str | None) -> AdapterResult:
+_SSRF_BLOCK_REASONS = {
+    "allowlist",
+    "authority",
+    "ipv4_mapped",
+    "local_name",
+    "non_global_ip",
+    "numeric_host",
+    "parse",
+    "port",
+    "resolution",
+    "scheme",
+}
+
+
+def _validated_ssrf_state(result: Mapping[str, object]) -> str:
     if not isinstance(result, Mapping) or "decision" not in result:
         raise AdapterContractError("ssrf-guard-demo result has unexpected shape")
     decision = result["decision"]
-    if decision not in {"allowed", "blocked"}:
-        raise AdapterContractError("ssrf decision is invalid")
+    if decision == "blocked":
+        if set(result) != {"decision", "reason"}:
+            raise AdapterContractError("blocked SSRF result has unexpected shape")
+        reason = _bounded_text(result["reason"], label="reason", limit=128)
+        if reason not in _SSRF_BLOCK_REASONS:
+            raise AdapterContractError("blocked SSRF reason is invalid")
+        return decision
+    if decision != "allowed" or set(result) != {
+        "decision", "host", "scheme", "port", "resolved_addresses", "binding"
+    }:
+        raise AdapterContractError("allowed SSRF result has unexpected shape")
+
+    host = _bounded_text(result["host"], label="host", limit=4096)
+    scheme = result["scheme"]
+    port = result["port"]
+    addresses = result["resolved_addresses"]
+    binding = result["binding"]
+    if scheme not in {"http", "https"}:
+        raise AdapterContractError("allowed SSRF scheme is invalid")
+    if isinstance(port, bool) or not isinstance(port, int) or not 1 <= port <= 65_535:
+        raise AdapterContractError("allowed SSRF port is invalid")
+    if not isinstance(addresses, list) or not 1 <= len(addresses) <= 32 or len(addresses) != len(set(addresses)):
+        raise AdapterContractError("allowed SSRF address set is invalid")
+    if addresses != sorted(addresses):
+        raise AdapterContractError("allowed SSRF address set is not canonical")
+    for raw_address in addresses:
+        if not isinstance(raw_address, str):
+            raise AdapterContractError("allowed SSRF address is invalid")
+        try:
+            address = ipaddress.ip_address(raw_address)
+        except ValueError as exc:
+            raise AdapterContractError("allowed SSRF address is invalid") from exc
+        if not address.is_global or (
+            isinstance(address, ipaddress.IPv6Address) and address.ipv4_mapped is not None
+        ):
+            raise AdapterContractError("allowed SSRF address is not global")
+        if str(address) != raw_address:
+            raise AdapterContractError("allowed SSRF address is not canonical")
+    if not isinstance(binding, Mapping) or set(binding) != {"host", "port", "addresses"}:
+        raise AdapterContractError("allowed SSRF binding has unexpected shape")
+    if binding["host"] != host or binding["port"] != port or binding["addresses"] != addresses:
+        raise AdapterContractError("allowed SSRF binding does not match decision evidence")
+    return decision
+
+
+def normalize_ssrf(result: Mapping[str, object], *, expected_decision: str | None) -> AdapterResult:
+    decision = _validated_ssrf_state(result)
     if expected_decision is None:
-        return AdapterResult("ssrf-guard-demo", str(decision), (), False)
+        return AdapterResult("ssrf-guard-demo", decision, (), False)
     if expected_decision not in {"allowed", "blocked"}:
         raise AdapterContractError("expected SSRF decision is invalid")
     if decision == expected_decision:
-        return AdapterResult("ssrf-guard-demo", str(decision), (), True)
+        return AdapterResult("ssrf-guard-demo", decision, (), True)
     reason = result.get("reason", "")
-    if reason and not isinstance(reason, str):
-        raise AdapterContractError("ssrf reason is invalid")
     finding = Finding(
-        finding_id=f"ssrf:decision:{_slug(expected_decision)}:{_slug(str(decision))}",
+        finding_id=f"ssrf:decision:{_slug(expected_decision)}:{_slug(decision)}",
         category=Category.SSRF,
         severity=Severity.CRITICAL if expected_decision == "blocked" and decision == "allowed" else Severity.HIGH,
         evidence=_evidence(source="ssrf-guard-demo", actual=decision, expected=expected_decision, reason=reason),
         message="SSRF guard decision differs from the fixture expectation.",
     )
-    return AdapterResult("ssrf-guard-demo", str(decision), (finding,), True)
+    return AdapterResult("ssrf-guard-demo", decision, (finding,), True)
 
 
 def normalize_source(

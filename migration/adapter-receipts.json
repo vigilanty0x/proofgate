@@ -1,15 +1,16 @@
 {
   "schemaVersion": 1,
   "target": "trustkit",
-  "status": "PREPARED",
+  "status": "PREPARED_CANDIDATE",
   "adapterContract": "trustkit/adapters-v1",
   "sources": [
     {
       "repository": "env-example-guard",
       "headSha": "4df3eb9ae1347c5f03618b78e2a5a33507750c75",
       "treeSha": "5804f0e6e2e1dfd207eee81eab62f032c1db4314",
+      "seam": "env_example_guard.core.run",
+      "seamBlobSha": "3d1887b2fc9586495890c419f606c3059f6f185d",
       "adapter": "normalize_env_example",
-      "sourceStates": ["verified", "blocked", "inconclusive"],
       "mapping": "verified->PASS; blocked->FAIL with secret/env findings; inconclusive->BLOCKED",
       "legacyIdentityPreserved": true
     },
@@ -17,8 +18,9 @@
       "repository": "secrets-hygiene",
       "headSha": "7ccb2c6ba08e62cdc111d3973ed000328304ab42",
       "treeSha": "d1c339f531994d46c550b18bca275b0f0609865e",
+      "seam": "secrets_hygiene.core.run",
+      "seamBlobSha": "5a941ec297c8823e5d6497710b506473c1bab1ee",
       "adapter": "normalize_secrets",
-      "sourceStates": ["clean", "blocked"],
       "mapping": "clean->PASS; measured secret findings->FAIL; truncation/size_blocked->BLOCKED",
       "legacyIdentityPreserved": true
     },
@@ -26,8 +28,9 @@
       "repository": "security-headers-lab",
       "headSha": "ca21a240122940d51a35a097704af3996890b1d8",
       "treeSha": "ec7cdb13fd90913bbd8fb0732cd3a13879f69bae",
+      "seam": "security_headers_lab.core.run",
+      "seamBlobSha": "742e4e92b7b5a4536be2e7022b6597bc37741c51",
       "adapter": "normalize_security_headers",
-      "sourceStates": ["hardened", "blocked"],
       "mapping": "hardened->PASS; blocked issues->FAIL",
       "legacyIdentityPreserved": true
     },
@@ -35,40 +38,44 @@
       "repository": "permission-matrix",
       "headSha": "50262c9af5e4c567ec240f7a3c3f1e7129cfb050",
       "treeSha": "307387727cf46ab427b79aa385b2f6045454cf6b",
+      "seam": "permission_matrix.core.run",
+      "seamBlobSha": "48330ceb53104f761691bd0902b671045fb16fdf",
       "adapter": "normalize_permission_matrix",
-      "sourceStates": ["allowed", "denied"],
-      "mapping": "exact declared expectations required; mismatch->FAIL; missing/incomplete expectations->BLOCKED",
+      "mapping": "exact declared expectations required; impossible source decision/reason combinations rejected; mismatch->FAIL; missing/incomplete expectations->BLOCKED",
       "legacyIdentityPreserved": true
     },
     {
       "repository": "ssrf-guard-demo",
       "headSha": "33d494745700724bdc438412f2ae5feedd916228",
       "treeSha": "3cc1b4308f9b9333f7b01eeb6526ed3d39eeb669",
+      "seam": "ssrf_guard_demo.core.guard",
+      "seamBlobSha": "5e9400d5142a5f0be3fe15c2daa4c2dfb7431284",
       "adapter": "normalize_ssrf",
-      "sourceStates": ["allowed", "blocked"],
-      "mapping": "fixture expectation required; matching decision->PASS; mismatch->FAIL; absent expectation->BLOCKED",
+      "mapping": "full source decision shape required; fixture expectation required; matching decision->PASS; mismatch->FAIL; absent expectation->BLOCKED",
       "legacyIdentityPreserved": true
     }
   ],
   "contractProperties": [
     "source implementations remain unchanged under packages/",
+    "source seam Git blob identities are asserted in the target test suite",
     "root adapters have no runtime dependency on source packages",
-    "source output shapes are validated before normalization",
+    "source output shapes and internally coupled fields are validated before normalization",
     "ambiguous permission and SSRF semantics fail closed without explicit expectations",
     "secret scanner truncation and oversized-file states remain BLOCKED rather than green",
     "evidence contains source metadata only and passes through TrustKit redaction",
     "legacy imports and CLIs are not removed or redirected"
   ],
   "tests": {
-    "file": "tests/test_source_adapters.py",
+    "files": ["tests/test_source_adapters.py", "tests/test_adapter_proof_strictness.py"],
     "usesImportedSourceImplementations": true,
+    "sourceSeamBlobIdentity": true,
     "positiveFixtures": true,
     "negativeCounterProofs": true,
     "fabricatedGreenRejection": true,
-    "ciRun": "TO_BE_RECORDED_IN_PR_HANDOFF"
+    "ciEvidence": "EXACT_HEAD_REQUIRED_IN_PR_HANDOFF"
   },
   "gates": {
-    "adapterCompatibility": "PREPARED_PENDING_EXACT_HEAD_CI",
+    "adapterCompatibility": "EXACT_HEAD_CI_REQUIRED",
     "consumerInventory": "BLOCKED_PARTIAL",
     "rollbackRehearsal": "BLOCKED_NOT_EXECUTED",
     "redirect": "NOT_AUTHORIZED",
