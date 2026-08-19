@@ -18,6 +18,11 @@ All notable changes follow Semantic Versioning.
 - Compare JSON recursively with strict scalar/container types, reject impossible receipt and replayed-verdict completion records, retain terminal journal reservations across competing appends, and use descriptor-anchored no-follow reads for every root-scoped file path.
 - Bound timeout cleanup, terminate session-detached descendants observed on Linux, reject proof while inherited pipes remain open, and normalize invalid CLI invocations to exit code 3.
 - Pin the build backend and make CI install and smoke-test the built wheel outside the checkout.
+- Record the five-repository ProofGate consolidation as **MERGED** at `49521b4e06e295665e9e56045389cb56f533718d`, while preserving every imported source history and tree-match proof.
+- Extend the supported CI matrix through Python 3.14 and add a machine-readable release policy that keeps `0.2.0` **PREPARED**, `publishEnabled=false`, `releaseAuthorized=false`, and `archiveAuthorized=false`.
+- Require manual release evidence to run only from reviewed default-branch lineage and retain wheel, sdist, SHA-256, CycloneDX SBOM, provenance, and SBOM-attestation evidence without publishing a release.
+
+Consolidation state is **MERGED**, but release state remains **PREPARED**. `MERGED` must not be reported as `RELEASED`, and no historical source repository may be archived until release, post-release verification, consumer, redirect, rollback, and explicit human archive gates are satisfied.
 
 ## 0.1.0 - 2026-08-15
 
