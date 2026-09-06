@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "target": "trustkit",
+  "base": null,
+  "baseHeadSha": null,
+  "sources": [
+    {
+      "repository": "secrets-hygiene",
+      "prefix": "packages/secrets-hygiene",
+      "headSha": "7ccb2c6ba08e62cdc111d3973ed000328304ab42",
+      "treeSha": "d1c339f531994d46c550b18bca275b0f0609865e",
+      "ancestor": true,
+      "treeMatch": true
+    },
+    {
+      "repository": "env-example-guard",
+      "prefix": "packages/env-example-guard",
+      "headSha": "4df3eb9ae1347c5f03618b78e2a5a33507750c75",
+      "treeSha": "5804f0e6e2e1dfd207eee81eab62f032c1db4314",
+      "ancestor": true,
+      "treeMatch": true
+    },
+    {
+      "repository": "security-headers-lab",
+      "prefix": "packages/security-headers-lab",
+      "headSha": "ca21a240122940d51a35a097704af3996890b1d8",
+      "treeSha": "ec7cdb13fd90913bbd8fb0732cd3a13879f69bae",
+      "ancestor": true,
+      "treeMatch": true
+    },
+    {
+      "repository": "ssrf-guard-demo",
+      "prefix": "packages/ssrf-guard-demo",
+      "headSha": "33d494745700724bdc438412f2ae5feedd916228",
+      "treeSha": "3cc1b4308f9b9333f7b01eeb6526ed3d39eeb669",
+      "ancestor": true,
+      "treeMatch": true
+    },
+    {
+      "repository": "permission-matrix",
+      "prefix": "packages/permission-matrix",
+      "headSha": "50262c9af5e4c567ec240f7a3c3f1e7129cfb050",
+      "treeSha": "307387727cf46ab427b79aa385b2f6045454cf6b",
+      "ancestor": true,
+      "treeMatch": true
+    }
+  ],
+  "state": "REHEARSAL_ONLY",
+  "archiveGate": "BLOCKED",
+  "reason": "Tests, compatibility, release, redirect, consumer, rollback, and human gates are not all verified."
+}

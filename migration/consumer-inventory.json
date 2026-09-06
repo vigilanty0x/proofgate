@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "target": "trustkit",
+  "observedDate": "2026-08-19",
+  "scope": "connected public GitHub code-search index for vigilanty0x default branches",
+  "status": "PARTIAL",
+  "complete": false,
+  "sources": [
+    {
+      "repository": "secrets-hygiene",
+      "headSha": "7ccb2c6ba08e62cdc111d3973ed000328304ab42",
+      "treeSha": "d1c339f531994d46c550b18bca275b0f0609865e",
+      "queries": ["secrets_hygiene", "secrets-hygiene"],
+      "indexedHits": 0
+    },
+    {
+      "repository": "env-example-guard",
+      "headSha": "4df3eb9ae1347c5f03618b78e2a5a33507750c75",
+      "treeSha": "5804f0e6e2e1dfd207eee81eab62f032c1db4314",
+      "queries": ["env_example_guard", "env-example-guard"],
+      "indexedHits": 0
+    },
+    {
+      "repository": "security-headers-lab",
+      "headSha": "ca21a240122940d51a35a097704af3996890b1d8",
+      "treeSha": "ec7cdb13fd90913bbd8fb0732cd3a13879f69bae",
+      "queries": ["security_headers_lab", "security-headers-lab"],
+      "indexedHits": 0
+    },
+    {
+      "repository": "ssrf-guard-demo",
+      "headSha": "33d494745700724bdc438412f2ae5feedd916228",
+      "treeSha": "3cc1b4308f9b9333f7b01eeb6526ed3d39eeb669",
+      "queries": ["ssrf_guard_demo", "ssrf-guard-demo"],
+      "indexedHits": 0
+    },
+    {
+      "repository": "permission-matrix",
+      "headSha": "50262c9af5e4c567ec240f7a3c3f1e7129cfb050",
+      "treeSha": "307387727cf46ab427b79aa385b2f6045454cf6b",
+      "queries": ["permission_matrix", "permission-matrix"],
+      "indexedHits": 0
+    }
+  ],
+  "limitations": [
+    "Code search is not proof that every public repository, branch, generated file, manifest, workflow, documentation page, fork, package-registry consumer, external installation, or human-known pilot was indexed.",
+    "Zero indexed hits must not be interpreted as zero consumers.",
+    "Private repositories and SKYOM are intentionally outside scope and were not inspected.",
+    "External consumers cannot be proven from the connected portfolio index."
+  ],
+  "gates": {
+    "consumerInventory": "BLOCKED",
+    "legacyAliasesActivated": false,
+    "redirectAuthorized": false,
+    "sourceArchiveAuthorized": false
+  },
+  "nextRequiredEvidence": [
+    "default-branch manifest and workflow enumeration for the public portfolio",
+    "documentation-reference enumeration",
+    "fork and package-registry checks where applicable",
+    "explicit pilot/adopter attestation",
+    "human approval before redirect or archive"
+  ]
+}
