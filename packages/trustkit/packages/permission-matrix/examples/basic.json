@@ -1,0 +1,26 @@
+{
+  "subjects": [
+    "demo-user"
+  ],
+  "actions": [
+    "read",
+    "write"
+  ],
+  "resources": [
+    "sample"
+  ],
+  "assignments": {
+    "demo-user": [
+      "reader"
+    ]
+  },
+  "rules": [
+    {
+      "role": "reader",
+      "action": "read",
+      "resource": "sample",
+      "effect": "allow"
+    }
+  ]
+}
+

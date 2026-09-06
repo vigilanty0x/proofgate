@@ -1,0 +1,1 @@
+{"measurement_complete":true,"findings":[{"id":"example-secret","category":"secret","severity":"critical","evidence":"fixture:synthetic","message":"synthetic example only","active":true}]}
