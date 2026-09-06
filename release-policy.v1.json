@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "product": "proofgate",
+  "version": "0.2.0",
+  "state": "PREPARED",
+  "publishEnabled": false,
+  "releaseAuthorized": false,
+  "archiveAuthorized": false,
+  "sourceBranch": "main",
+  "humanReleaseApprovalRequired": true,
+  "requiredEvidence": [
+    "wheel",
+    "sdist",
+    "sha256sums",
+    "cyclonedx-sbom",
+    "wheel-provenance",
+    "sdist-provenance",
+    "wheel-sbom-attestation"
+  ],
+  "rule": "PREPARED is not RELEASED; release publication and source archival require separate reviewed human authorization."
+}

@@ -3,6 +3,7 @@
   "target": "proofgate",
   "base": "proofgate",
   "baseHeadSha": "7b4fd1eb84241f647a91d55dd478a78f60105b31",
+  "mergeCommitSha": "49521b4e06e295665e9e56045389cb56f533718d",
   "sources": [
     {
       "repository": "status-truth",
@@ -45,7 +46,17 @@
       "treeMatch": true
     }
   ],
-  "state": "REHEARSAL_ONLY",
+  "state": "MERGED",
   "archiveGate": "BLOCKED",
-  "reason": "Tests, compatibility, release, redirect, consumer, rollback, and human gates are not all verified."
+  "gates": {
+    "sourceHistoryImported": true,
+    "treeMatchVerified": true,
+    "releasePublished": false,
+    "postReleaseVerified": false,
+    "consumerMigrationVerified": false,
+    "redirectVerified": false,
+    "rollbackVerified": false,
+    "humanArchiveApproval": false
+  },
+  "reason": "Consolidation is merged and source histories are preserved, but release, post-release verification, consumer, redirect, rollback, and human archive gates are not all verified."
 }

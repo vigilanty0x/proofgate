@@ -6,22 +6,41 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: proofgate-release-evidence
+  cancel-in-progress: false
+
 jobs:
   attest-release-candidate:
     name: Build and attest candidate
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
     permissions:
       contents: read
       id-token: write
       attestations: write
+      artifact-metadata: write
     steps:
+      - name: Require reviewed default-branch lineage
+        env:
+          CURRENT_REF: ${{ github.ref_name }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "candidate ref=$CURRENT_REF default branch=$DEFAULT_BRANCH"
+          if [[ "$CURRENT_REF" != "$DEFAULT_BRANCH" ]]; then
+            echo "Release evidence must be generated from the repository default branch." >&2
+            exit 2
+          fi
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.12"
+          python-version: "3.14"
+      - name: Verify release and consolidation policy
+        run: python scripts/check_release_policy.py
       - name: Install pinned build tooling
         run: python -m pip install --disable-pip-version-check "build==1.2.2.post1" "wheel==0.45.1"
       - name: Build wheel and sdist
@@ -36,7 +55,27 @@ jobs:
         working-directory: ${{ runner.temp }}
         run: proofgate --version
       - name: Generate checksums and CycloneDX SBOM
+        env:
+          GITHUB_SHA: ${{ github.sha }}
         run: python scripts/release_evidence.py --dist dist
+      - name: Assert PREPARED evidence cannot claim release
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          evidence = json.loads(Path("dist/RELEASE_EVIDENCE.json").read_text(encoding="utf-8"))
+          assert evidence["state"] == "PREPARED"
+          assert evidence["source"]["sha"] == "${{ github.sha }}"
+          assert evidence["claims"] == {
+              "attested": False,
+              "published": False,
+              "released": False,
+              "signed": False,
+          }
+          print("PREPARED release evidence remains non-authoritative for publication")
+          PY
       - name: Attest wheel provenance
         uses: actions/attest@508db95dd578ae2727ebd6217d5ba78e4fbda05d # v4.2.1
         with:
@@ -56,4 +95,4 @@ jobs:
           name: proofgate-release-evidence-${{ github.sha }}
           path: dist/
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 30
