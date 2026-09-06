@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "target": "contract-lab",
+  "base": null,
+  "baseHeadSha": null,
+  "sources": [
+    {
+      "repository": "schema-contract-tester",
+      "prefix": "packages/schema-contract-tester",
+      "headSha": "720edb387ef64464ff82fa84b74b36e59b9008be",
+      "treeSha": "1653cbcc1329581acada46c098967fb52865818d",
+      "ancestor": true,
+      "treeMatch": true
+    },
+    {
+      "repository": "webhook-sandbox",
+      "prefix": "packages/webhook-sandbox",
+      "headSha": "efbbd114ce118977da3028bc9341ddd8ad8862d0",
+      "treeSha": "f8bcf8b689b19041d317a942bbe50f6c9d1ab205",
+      "ancestor": true,
+      "treeMatch": true
+    },
+    {
+      "repository": "api-contract-mock-server",
+      "prefix": "packages/api-contract-mock-server",
+      "headSha": "88686e8cd261a321c1c189f1265cdb309a207108",
+      "treeSha": "900fecf18c73937efc10b0352d55fca88c22d913",
+      "ancestor": true,
+      "treeMatch": true
+    }
+  ],
+  "state": "REHEARSAL_ONLY",
+  "archiveGate": "BLOCKED",
+  "reason": "Tests, compatibility, release, redirect, consumer, rollback, and human gates are not all verified."
+}

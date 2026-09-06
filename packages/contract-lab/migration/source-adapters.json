@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "target": "contract-lab",
+  "activationState": "blocked",
+  "migrationPerformed": false,
+  "legacyAliasesActivated": false,
+  "adapters": [
+    {
+      "source": "schema-contract-tester",
+      "sourceHeadSha": "720edb387ef64464ff82fa84b74b36e59b9008be",
+      "seam": "schema_contract_tester.core.run",
+      "seamBlobSha": "b8827fea89a7b59b9c3ae478bd9d0d08c801235f",
+      "strategy": "normalization_adapter",
+      "strictOutputContract": true,
+      "preserves": ["compatible", "blocked", "errors", "errors_truncated", "records"],
+      "counterProofs": ["compatible+truncated => BLOCKED", "invalid error row => BLOCKED"],
+      "nonEquivalence": "record/schema validation is not schema-evolution comparison"
+    },
+    {
+      "source": "webhook-sandbox",
+      "sourceHeadSha": "efbbd114ce118977da3028bc9341ddd8ad8862d0",
+      "seam": "webhook_sandbox.inspect_webhook",
+      "seamBlobSha": "4578bf4fe3f42b3e600a1663710a9997a3323363",
+      "strategy": "normalization_adapter",
+      "strictOutputContract": true,
+      "preserves": ["accepted", "errors", "assurance", "request_sha256", "bytes"],
+      "counterProofs": ["accepted+errors => BLOCKED", "invalid digest shape => BLOCKED"],
+      "nonEquivalence": "source timestamp/event-id HMAC semantics are preserved as source evidence and are not replaced by the root raw-payload HMAC primitive"
+    },
+    {
+      "source": "api-contract-mock-server",
+      "sourceHeadSha": "88686e8cd261a321c1c189f1265cdb309a207108",
+      "seam": "api_contract_mock_server.core.evaluate",
+      "seamBlobSha": "23b567fae7c06b1f0800fa9ccfb05727c1c922c3",
+      "strategy": "normalization_adapter",
+      "strictOutputContract": true,
+      "sourceEvidenceDigestVerified": true,
+      "preserves": ["project", "status", "reason", "record", "responses", "evidence_sha256"],
+      "counterProofs": ["wrong evidence digest => BLOCKED", "network_server=true => BLOCKED"],
+      "nonEquivalence": "deterministic response fixtures remain source semantics; the root core does not become an HTTP server"
+    }
+  ],
+  "gate": {
+    "sourceBlobIdentityRequired": true,
+    "strictSourceOutputValidationRequired": true,
+    "positiveCounterproofsRequired": true,
+    "negativeCounterproofsRequired": true,
+    "consumerInventoryRequired": true,
+    "humanApprovalRequired": true,
+    "redirectAuthorized": false,
+    "archiveAuthorized": false
+  }
+}

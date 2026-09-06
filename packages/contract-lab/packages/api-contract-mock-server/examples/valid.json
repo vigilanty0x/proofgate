@@ -1,0 +1,13 @@
+{
+  "contract": "openapi.json",
+  "routes": [
+    "GET /health"
+  ],
+  "modes": [
+    "success",
+    "degraded",
+    "invalid"
+  ],
+  "default_status": 200
+}
+

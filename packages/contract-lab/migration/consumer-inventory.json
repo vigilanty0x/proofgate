@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "target": "contract-lab",
+  "observedDate": "2026-08-19",
+  "scope": "connected public GitHub code-search index for vigilanty0x default branches",
+  "status": "PARTIAL",
+  "complete": false,
+  "sources": [
+    {
+      "repository": "schema-contract-tester",
+      "headSha": "720edb387ef64464ff82fa84b74b36e59b9008be",
+      "treeSha": "1653cbcc1329581acada46c098967fb52865818d",
+      "queries": ["schema_contract_tester", "schema-contract-tester"],
+      "indexedHits": 0
+    },
+    {
+      "repository": "webhook-sandbox",
+      "headSha": "efbbd114ce118977da3028bc9341ddd8ad8862d0",
+      "treeSha": "f8bcf8b689b19041d317a942bbe50f6c9d1ab205",
+      "queries": ["webhook_sandbox", "webhook-sandbox"],
+      "indexedHits": 0
+    },
+    {
+      "repository": "api-contract-mock-server",
+      "headSha": "88686e8cd261a321c1c189f1265cdb309a207108",
+      "treeSha": "900fecf18c73937efc10b0352d55fca88c22d913",
+      "queries": ["api_contract_mock_server", "api-contract-mock-server"],
+      "indexedHits": 0
+    }
+  ],
+  "limitations": [
+    "Code search is not proof that every public repository, branch, generated file, manifest, workflow, documentation page, fork, package-registry consumer, external installation, or human-known pilot was indexed.",
+    "Zero indexed hits must not be interpreted as zero consumers.",
+    "Private repositories and SKYOM are intentionally outside scope and were not inspected.",
+    "External consumers cannot be proven from the connected portfolio index."
+  ],
+  "gates": {
+    "consumerInventory": "BLOCKED",
+    "legacyAliasesActivated": false,
+    "redirectAuthorized": false,
+    "sourceArchiveAuthorized": false
+  },
+  "nextRequiredEvidence": [
+    "default-branch manifest and workflow enumeration for the public portfolio",
+    "documentation-reference enumeration",
+    "fork and package-registry checks where applicable",
+    "explicit pilot/adopter attestation",
+    "human approval before redirect or archive"
+  ]
+}
