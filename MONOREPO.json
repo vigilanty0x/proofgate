@@ -1,0 +1,203 @@
+{
+  "delete_authorized": false,
+  "schema_version": 1,
+  "status": "LOCAL_PREPARATION",
+  "target": {
+    "kind": "PRODUCT",
+    "repository": "vigilanty0x/proofgate",
+    "sources": [
+      {
+        "disposition": "ABSORB",
+        "repository": "vigilanty0x/api-contract-mock-server",
+        "source": {
+          "archived": false,
+          "default_branch": "main",
+          "head": "88686e8cd261a321c1c189f1265cdb309a207108",
+          "tree": "900fecf18c73937efc10b0352d55fca88c22d913",
+          "visibility": "PUBLIC"
+        },
+        "target_path": "packages/contract-lab/packages/api-contract-mock-server"
+      },
+      {
+        "disposition": "ABSORB",
+        "repository": "vigilanty0x/audit-trail-lite",
+        "source": {
+          "archived": false,
+          "default_branch": "main",
+          "head": "1b7dab94f577161af38b6c01471e40ff36c0bc33",
+          "tree": "d5b638c8c315a46a0a6990ee88f366513db1079c",
+          "visibility": "PUBLIC"
+        },
+        "target_path": "packages/audit-trail-lite"
+      },
+      {
+        "disposition": "ABSORB",
+        "repository": "vigilanty0x/contract-lab",
+        "source": {
+          "archived": false,
+          "default_branch": "main",
+          "head": "ad541562135a7e1a543f04da0ae06a5c152535d8",
+          "tree": "b548f17eae1c35643bcc9392535601d7cc8a83c4",
+          "visibility": "PUBLIC"
+        },
+        "target_path": "packages/contract-lab"
+      },
+      {
+        "disposition": "ABSORB",
+        "repository": "vigilanty0x/env-example-guard",
+        "source": {
+          "archived": false,
+          "default_branch": "main",
+          "head": "4df3eb9ae1347c5f03618b78e2a5a33507750c75",
+          "tree": "5804f0e6e2e1dfd207eee81eab62f032c1db4314",
+          "visibility": "PUBLIC"
+        },
+        "target_path": "packages/trustkit/packages/env-example-guard"
+      },
+      {
+        "disposition": "ABSORB",
+        "repository": "vigilanty0x/evidence-ledger",
+        "source": {
+          "archived": false,
+          "default_branch": "main",
+          "head": "ed8ca34bca8119dbeda038f4598cafe05025ff80",
+          "tree": "ada7c0f795d0880e9a7e6546edc6e353f624ac0c",
+          "visibility": "PUBLIC"
+        },
+        "target_path": "packages/evidence-ledger"
+      },
+      {
+        "disposition": "ABSORB",
+        "repository": "vigilanty0x/permission-matrix",
+        "source": {
+          "archived": false,
+          "default_branch": "main",
+          "head": "50262c9af5e4c567ec240f7a3c3f1e7129cfb050",
+          "tree": "307387727cf46ab427b79aa385b2f6045454cf6b",
+          "visibility": "PUBLIC"
+        },
+        "target_path": "packages/trustkit/packages/permission-matrix"
+      },
+      {
+        "disposition": "KEEP",
+        "repository": "vigilanty0x/proofgate",
+        "source": {
+          "archived": false,
+          "default_branch": "main",
+          "head": "83e05a0e94e54853dc70b4fbed082d6c8c9287ba",
+          "tree": "c6aaf1702a0d335a2aaf093f640bc81ff9305593",
+          "visibility": "PUBLIC"
+        },
+        "target_path": "."
+      },
+      {
+        "disposition": "ABSORB",
+        "repository": "vigilanty0x/run-replay",
+        "source": {
+          "archived": false,
+          "default_branch": "main",
+          "head": "72026f03daa76844e6737937293573f80ae9d3ef",
+          "tree": "ca758b7404a0c9f634ee94b37bc0d59dab681250",
+          "visibility": "PUBLIC"
+        },
+        "target_path": "packages/run-replay"
+      },
+      {
+        "disposition": "ABSORB",
+        "repository": "vigilanty0x/schema-contract-tester",
+        "source": {
+          "archived": false,
+          "default_branch": "main",
+          "head": "720edb387ef64464ff82fa84b74b36e59b9008be",
+          "tree": "1653cbcc1329581acada46c098967fb52865818d",
+          "visibility": "PUBLIC"
+        },
+        "target_path": "packages/contract-lab/packages/schema-contract-tester"
+      },
+      {
+        "disposition": "ABSORB",
+        "repository": "vigilanty0x/secrets-hygiene",
+        "source": {
+          "archived": false,
+          "default_branch": "main",
+          "head": "7ccb2c6ba08e62cdc111d3973ed000328304ab42",
+          "tree": "d1c339f531994d46c550b18bca275b0f0609865e",
+          "visibility": "PUBLIC"
+        },
+        "target_path": "packages/trustkit/packages/secrets-hygiene"
+      },
+      {
+        "disposition": "ABSORB",
+        "repository": "vigilanty0x/security-headers-lab",
+        "source": {
+          "archived": false,
+          "default_branch": "main",
+          "head": "ca21a240122940d51a35a097704af3996890b1d8",
+          "tree": "ec7cdb13fd90913bbd8fb0732cd3a13879f69bae",
+          "visibility": "PUBLIC"
+        },
+        "target_path": "packages/trustkit/packages/security-headers-lab"
+      },
+      {
+        "disposition": "ABSORB",
+        "repository": "vigilanty0x/ssrf-guard-demo",
+        "source": {
+          "archived": false,
+          "default_branch": "main",
+          "head": "33d494745700724bdc438412f2ae5feedd916228",
+          "tree": "3cc1b4308f9b9333f7b01eeb6526ed3d39eeb669",
+          "visibility": "PUBLIC"
+        },
+        "target_path": "packages/trustkit/packages/ssrf-guard-demo"
+      },
+      {
+        "disposition": "ABSORB",
+        "repository": "vigilanty0x/status-truth",
+        "source": {
+          "archived": false,
+          "default_branch": "main",
+          "head": "f6a442b29b932be83d2d067b062d72b322b6ae01",
+          "tree": "dfaccac67c63b8c29376ea9f2e8f70a17fa25cf5",
+          "visibility": "PUBLIC"
+        },
+        "target_path": "packages/status-truth"
+      },
+      {
+        "disposition": "ABSORB",
+        "repository": "vigilanty0x/structured-output-guard",
+        "source": {
+          "archived": false,
+          "default_branch": "main",
+          "head": "bf4ae013d091957163afbba6ee7c114b6d4fb9a9",
+          "tree": "ad5c4b708abe101b12e688c3f6d8e0a0201915bd",
+          "visibility": "PUBLIC"
+        },
+        "target_path": "packages/structured-output-guard"
+      },
+      {
+        "disposition": "ABSORB",
+        "repository": "vigilanty0x/trustkit",
+        "source": {
+          "archived": false,
+          "default_branch": "main",
+          "head": "47347d992d84c888185366a3b30918318e4d377c",
+          "tree": "25800e4f00c9faed820f218eecc8b65b1f1048fc",
+          "visibility": "PUBLIC"
+        },
+        "target_path": "packages/trustkit"
+      },
+      {
+        "disposition": "ABSORB",
+        "repository": "vigilanty0x/webhook-sandbox",
+        "source": {
+          "archived": false,
+          "default_branch": "main",
+          "head": "efbbd114ce118977da3028bc9341ddd8ad8862d0",
+          "tree": "f8bcf8b689b19041d317a942bbe50f6c9d1ab205",
+          "visibility": "PUBLIC"
+        },
+        "target_path": "packages/contract-lab/packages/webhook-sandbox"
+      }
+    ]
+  }
+}
