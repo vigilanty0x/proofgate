@@ -40,6 +40,6 @@ The root core does **not** silently replace these CLIs. Adapter/alias activation
 
 ## Safety boundary
 
-TrustKit is defensive and synthetic-fixture-first. It does not contain production credentials, client data, private domains, or SKYOM content. Missing measurement is `BLOCKED`, never `PASS`.
+TrustKit is defensive and synthetic-fixture-first. It does not contain production credentials, client data, private domains, or private product content. Missing measurement is `BLOCKED`, never `PASS`.
 
 See `docs/THREAT_MODEL.md` and `docs/MIGRATION.md` for the bounded threat model and migration/rollback gates.

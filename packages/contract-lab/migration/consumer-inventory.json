@@ -31,7 +31,7 @@
   "limitations": [
     "Code search is not proof that every public repository, branch, generated file, manifest, workflow, documentation page, fork, package-registry consumer, external installation, or human-known pilot was indexed.",
     "Zero indexed hits must not be interpreted as zero consumers.",
-    "Private repositories and SKYOM are intentionally outside scope and were not inspected.",
+    "Private repositories and private product data are intentionally outside scope and were not inspected.",
     "External consumers cannot be proven from the connected portfolio index."
   ],
   "gates": {
