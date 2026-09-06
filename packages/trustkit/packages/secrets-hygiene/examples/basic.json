@@ -1,0 +1,7 @@
+{
+  "files": {
+    "README.txt": "public documentation only",
+    "config.example": "SERVICE_TOKEN=<replace-me>"
+  }
+}
+

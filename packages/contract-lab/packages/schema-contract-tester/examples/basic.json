@@ -1,0 +1,19 @@
+{
+  "records": [
+    {
+      "name": "sample",
+      "count": 2
+    }
+  ],
+  "schema": {
+    "name": {
+      "type": "string",
+      "required": true
+    },
+    "count": {
+      "type": "integer",
+      "required": true
+    }
+  }
+}
+

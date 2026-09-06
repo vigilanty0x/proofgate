@@ -6,6 +6,33 @@ ProofGate is a dependency-free Python CLI and library for evidence-gated deliver
 
 It evaluates RFC 8259 JSON contracts, dependency-ordered evidence, threshold policies, multi-contract suites, portable receipts, and tamper-evident journals. Every observation remains classified as proof, inference, or blockage. Missing or invalid evidence never becomes hidden success.
 
+## Concrete monorepo
+
+ProofGate is the canonical repository for evidence gates, defensive policy, and
+contract verification. The root CLI decides whether work has enough proof to
+reach `DONE`; the imported suites provide the security and interface evidence
+that those decisions can consume.
+
+| Area | Location | Included tools |
+|---|---|---|
+| Evidence gates | `.` | `proofgate` validation, execution, replay, receipts, suites, and regression diffs |
+| Evidence operations | `packages/` | `audit-trail-lite`, `evidence-ledger`, `run-replay`, `status-truth`, and `structured-output-guard` |
+| Defensive policy | `packages/trustkit/` | `trustkit` plus `env-example-guard`, `permission-matrix`, `secrets-hygiene`, `security-headers-lab`, and `ssrf-guard-demo` |
+| Contract verification | `packages/contract-lab/` | `contract-lab` plus `api-contract-mock-server`, `schema-contract-tester`, and `webhook-sandbox` |
+
+[`MONOREPO.json`](MONOREPO.json) binds the 16 source repositories to their
+canonical paths and immutable source revisions. It deliberately records
+`delete_authorized: false`: validation proves the consolidation map without
+authorizing removal of any source repository.
+
+Validate the map and run the imported suite tests from a development checkout:
+
+```bash
+python scripts/check_monorepo.py
+(cd packages/trustkit && python -m unittest discover -s tests -v)
+(cd packages/contract-lab && python -m unittest discover -s tests -v)
+```
+
 ## Why
 
 Automation often marks work complete because a process ended, a message was posted, or an agent said it was done. ProofGate makes completion reproducible: the final state follows from explicit evidence that another person or CI runner can evaluate again.

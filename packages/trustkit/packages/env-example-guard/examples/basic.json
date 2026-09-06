@@ -1,0 +1,8 @@
+{
+  "actual_keys": [
+    "APP_MODE",
+    "SERVICE_TOKEN"
+  ],
+  "example_text": "APP_MODE=\\nSERVICE_TOKEN=\\n"
+}
+
